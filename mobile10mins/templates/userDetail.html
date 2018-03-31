@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.6/semantic.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.28/vue.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reqwest/2.0.5/reqwest.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.js"></script>
+
+        <style media="screen">
+            body {
+                padding-top: 40px;
+            }
+            .ui.profile.container {
+                padding-top: 60px;
+            }
+
+        </style>
+    </head>
+    {% verbatim %}
+    <body id="app">
+
+        <div  class="ui fixed inverted red borderless menu">
+            <div class="header item">
+                <i class="icon angle left"></i>
+                10MINs
+            </div>
+
+        </div>
+
+        <!-- v-if="!opps" -->
+        <div class="ui profile container">
+            <h2 class="ui header">
+                <img :src="userinfo.url_image" class="ui circular image">
+                {{ userinfo.name }}
+            </h2>
+            <form class="ui form">
+                <div class="field">
+                    <label>name</label>
+                    <input v-model="modal.name" type="text"  value="{{userinfo.name}}">
+                </div>
+                <div class="field">
+                    <label>password</label>
+                    <input v-model="modal.password" type="text"  value="{{userinfo.password}}">
+                </div>
+            </form>
+            <button v-on:click="changeUserInfo" class="ui button" type="button">Save</button>
+        </div>
+        <script>
+            vm = new Vue({
+                el:"#app",
+                data:{
+                    modal:{
+                      name:'',
+                      password:'',
+                    },
+                    userinfo : "",
+                },
+                methods:{
+                    getData:function (id) {
+                        var self = this;
+                        reqwest({
+                            url:'/api/userinfo/' + id,
+                            type:'json',
+                            method:'get',
+                            success:function (resp) {
+                                console.log(resp);
+                                self.userinfo = resp
+                            },
+                        })
+                    },
+                    changeUserInfo:function (userinfo) {
+                        var self = this;
+                        var id = self.userinfo.id
+                        reqwest({
+                            url:'/api/userinfo/' + id,
+                            type:'json',
+                            method:'put',
+                            data:{
+                                author_choice:self.userinfo.author_choice,
+                                name:self.modal.name,
+                                password:self.modal.password,
+                                email:self.userinfo.email,
+                                url_image:self.userinfo.url_image,
+                            },
+                            success:function (resp) {
+                                console.log(resp);
+                                self.getData(id)
+                            },
+                        })
+                    },
+                },
+                ready:function(){
+                    id = Cookies.get('id')
+                    this.getData(id)
+                  // 这里可以成功拿到id了，下面就是通过id，拿到当前用户的数据并用vue渲染
+                }
+            })
+        </script>
+    </body>
+    {% endverbatim %}
+</html>

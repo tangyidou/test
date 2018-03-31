@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.6/semantic.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.28/vue.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reqwest/2.0.5/reqwest.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.js"></script>
+
+        <style media="screen">
+            body {
+                padding-top: 40px;
+            }
+            .ui.vertical.segment.masthead {
+                height:200px;
+                padding-top:80px;
+                background-image: url(images/super_blur_back2.jpg);
+                background-size: cover;
+            }
+            .ui.login.container {
+                padding-top: 60px;
+            }
+            .ui.fixed.something.menu {
+                position: fixed;top:50px;
+            }
+            .unscrollable{
+                height:100%;
+                overflow:hidden;
+            }
+            .ui.padded.modal.active {
+                transform: translate(0, -50%);
+            }
+            .ui.vertical.inverted.background.segment {
+                height: 260px;
+                background-size: cover;
+            }
+
+            .shortcut.buttons{
+                position: absolute;top:15px;left:15px;
+            }
+
+
+        </style>
+    </head>
+    {% verbatim %}
+    <body id="app" >
+        <div  class="ui fixed inverted red borderless menu">
+            <div  v-on:click="showMenu = !showMenu" class="header item">
+                10MINs
+            </div>
+
+        </div>
+        <!-- v-if="!opps" -->
+        <div class="ui vertical center aligned inverted segment masthead"
+             style="background:url('/static/images/super_blur_back2.jpg');background-size: cover;">
+            <h1 class="ui  heasder">Welcome</h1>
+        </div>
+        <div class="ui login container">
+            <form class="ui form">
+                <h3 class="ui header">{{ showMsg }}</h3>
+                <div class="field">
+                    <label>Username</label>
+                    <input v-model="modal.name" type="text"  placeholder="Username">
+                </div>
+                <div class="field">
+                    <label>Password</label>
+                    <input v-model="modal.password" type="text"  placeholder="Password">
+                </div>
+            </form>
+            <button v-on:click="logIn" class="ui button" type="button">Submit</button>
+
+        </div>
+
+
+
+        <script>
+            vm = new Vue({
+                el:"#app",
+                data:{
+                    modal:{
+                        name:'',
+                        password:'',
+                        msg:'',
+                    },
+                },
+                methods:{
+                    getData:function () {
+                        var self = this;
+                        reqwest({
+                            url:'http://127.0.0.1:8000/api/userinfo/',
+                            type:'json',
+                            method:'get',
+                            success:function (resp) {
+                                console.log(resp);
+                                self.userinfo_list = resp
+                            },
+                        })
+                    },
+
+                    logIn:function () {
+                        var self = this;
+                        console.log(self.modal.name,self.modal.password)
+                        reqwest({
+                            url:'/api/token-auth',
+                            type:'json',
+                            method:'post',
+                            data:{
+                                username:self.modal.name,
+                                password:self.modal.password,
+                            },
+                            success:function (resp) {
+                                console.log(resp);
+                                Cookies.set('token',resp.token);
+                                window.location.href="/m/userlistpanel/";
+                                self.getData()
+                            },
+
+                        })
+                    },
+                    logOut:function () {
+                        var self = this;
+                        Cookies.remove('token')
+                    },
+                },
+                computed:{
+                    showMsg:function () {
+                        if (this.modal.msg == '201') {
+                            return '登录成功'
+                        } else if (this.modal.msg == '400') {
+                            return '错误的用户名和密码'
+                        } else {
+                            return '请输入您的账户名和密码'
+                        }
+                    },
+                },
+                ready:function () {
+                    this.getData()
+                }
+            })
+        </script>
+    </body>
+    {% endverbatim %}
+</html>
